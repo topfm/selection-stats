@@ -38,7 +38,6 @@ def is_file(filename):
         raise argparse.ArgumentTypeError(msg)
     else:
         global inputFileName
-        inputFileName = filename.replace('.fasta', '_selectionStats.txt')
         return filename
 
 def get_arguments():
@@ -64,24 +63,24 @@ def replace_stop(sequence):
 def calc_stats(alignment, outgroup):
     statDict = {}
     cs = egglib.stats.ComputeStats()
-    cs.add_stats('thetaW','Pi','D','lseff')
+    cs.add_stats('thetaW','Pi','D','lseff','nseff')
     a = egglib.io.from_fasta(alignment, alphabet=egglib.alphabets.DNA)
     for i in range(a.ns):
         a.get_sequence(i)
         if args.frame:
             a.sequence(i, sequence=replace_stop(a.sequence(i)))
-    polyDict = cs.process_align(a, max_missing= .1)
-    print(polyDict)
+    polyDict = cs.process_align(a, max_missing= .2)
     try:
         statDict['theta'] = float(polyDict['thetaW'])/polyDict['lseff']
         statDict['pi'] = float(polyDict['Pi'])/polyDict['lseff']
         statDict['tajimaD'] = polyDict['D']
-        print('Analyzing sites...')
+        statDict['nseff'] = polyDict['nseff']
     ##sometimes a site has more than the allowed max_missing data, and therefore it 
     except TypeError:
         statDict['theta'] = None 
         statDict['pi'] = None 
         statDict['tajimaD'] = None
+        statDict['nseff'] = polyDict['nseff']
     if args.frame:
         if len(a.sequence(1))%3 != 0:
             print("The following alignment is not in frame:")
@@ -112,8 +111,8 @@ def calc_stats(alignment, outgroup):
 
 
 def write_outfile(alignDict, outgroup):
-    outfile = open(inputFileName, 'w')
-    outfile.write('Alignment\tTheta\tPi\tTajimasD')
+    outfile = open('selectionStats.txt', 'w')
+    outfile.write('Alignment\tTheta\tPi\tTajimasD\tnseff')
     if args.frame:
         outfile.write('\tPiN\tPiS')
         if outgroup is not None:
@@ -126,7 +125,7 @@ def write_outfile(alignDict, outgroup):
         if len(s) == 0:
             print(a, " is not in frame")
             continue
-        outfile.write('%s\t%s\t%s\t%s' % (a, s['theta'],s['pi'], s['tajimaD']))
+        outfile.write('%s\t%s\t%s\t%s\t%s' % (a, s['theta'],s['pi'], s['tajimaD'], s['nseff']))
         if args.frame:
             outfile.write('\t%s\t%s' % (s['piN'], s['piS']))
             if outgroup is not None:

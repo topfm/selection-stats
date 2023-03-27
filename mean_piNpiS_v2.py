@@ -17,15 +17,19 @@ avDict = {}
 with open(statsfile, "r") as infile:
     next(infile)
     for line in infile:
-            info = line.strip().split("\t")
+        info = line.strip().split("\t")
+        piNpiS = info[-2]
+        if "None" in piNpiS:
+            pass
+        else:
             gene= info[0]
             gene = gene.split("_")
-            piNpiS = info[-2]
             if len(gene) > 3:
                 gene = gene[0] + "_" + gene[1]
             else:
                 gene = gene[0]
             dd[gene].append(piNpiS)
+            
         
 
 ##Averaging each set of values for each key in the dictionary
