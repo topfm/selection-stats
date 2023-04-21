@@ -65,8 +65,6 @@ def calc_stats(alignment):
     try:
         statDict['pi'] = float(statsall['Pi'])/statsall['lseff']
         statDict['nseff'] = statsall['nseff']
-        print("The value of pi is: " + str(statDict['pi']))
-
     ##sometimes Pi = None because there isn't enough information because the alignment or codon alignment didn't pass the max_missing threshhold.
     ##This is when a gene has really bad alignment. Stats aren't able to be calculated, so we just get "None."
     except TypeError:
@@ -76,27 +74,22 @@ def calc_stats(alignment):
         statDict['piN'] = float(statsNS['Pi'])/a_div.num_sites_NS
     ##Here, if pi is 0, piN = 0 (because piN is calculated as pi/#N_sites). But if pi is nonne, piN = None.
     except TypeError:
-        if statDict['pi'] == 0:
-            statDict['piN'] = 0
-        else:
-            statDict['piN'] = None
+        statDict['piN'] = 0
     try:
         statDict['piS'] = float(statsS['Pi'])/a_div.num_sites_S
     except TypeError:
-        statDict['piS'] = None
+        statDict['piS'] = 0
     ##making sure that 0/0 = 0 and 0/1= 0 and 0/None = None, in terms of piNpiS.
-    if (statDict["piN"] is not None) and (statDict["piS"] is not None):
+    try: 
         statDict['piNpiS'] = statDict['piN']/statDict['piS']
-    else:
-        if statDict["piN"] == 0:
+    except ZeroDivisionError:
+        if statDict['piN'] == 0:
             statDict['piNpiS'] = 0
         else:
             statDict['piNpiS'] = None
-    print("The value of piNpiS is: " + str(statDict['piNpiS']))
     return statDict
 
 def write_outfile(alignDict):
-    
     outfile = open('selectionStats_piNpiS.txt', 'w')
     outfile.write('Alignment\tPi\tPiN\tPiS\tPiNPiS\tnseff\n')
     for key,value in alignDict.items():
@@ -112,7 +105,6 @@ alignDict = {}
 if args.alignment is None:
     for align in glob.glob(args.directory + '*.fasta'):
         alignName = os.path.splitext(align)[0].replace(args.directory, "")
-        print(alignName)
         alignDict[alignName] = calc_stats(align)
 else:
     alignName = os.path.splitext(args.alignment)[0]

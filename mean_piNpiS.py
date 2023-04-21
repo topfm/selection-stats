@@ -17,6 +17,9 @@ avDict = {}
 with open(statsfile, "r") as infile:
     next(infile)
     for line in infile:
+        if "None" in line:
+            pass
+        else:
             info = line.strip().split("\t")
             gene= info[0]
             gene = gene.split("_")
@@ -31,10 +34,10 @@ with open(statsfile, "r") as infile:
 ##Averaging each set of values for each key in the dictionary
 ##This will give an average piNpiS value for each gene!
 for k, v in dd.items():
-    if v != "NA":
-        v = [(float(i)) for i in v]
-        mean = sum(v) / len(v)
-        avDict[k] = round(mean, 2)
+    v = [(float(i)) for i in v]
+    mean = sum(v) / len(v)
+    avDict[k] = round(mean, 2)
+
 
 ##Writing the output file
 outfile = statsfile.replace(".txt", "_average.csv") 
