@@ -72,7 +72,6 @@ def calc_stats(alignment):
         statDict['pi'] = None
     try:
         statDict['piN'] = float(statsNS['Pi'])/a_div.num_sites_NS
-    ##Here, if pi is 0, piN = 0 (because piN is calculated as pi/#N_sites). But if pi is nonne, piN = None.
     except TypeError:
         statDict['piN'] = 0
     try:
