@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+#Script written by Madison Youngblom
+
 import sys
 import subprocess
 from collections import defaultdict
