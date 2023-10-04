@@ -1,0 +1,107 @@
+---
+title: "selection statistics and piNpiS"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+```{r, include = FALSE}
+library(tidyverse)
+library(formattable)
+library(stargazer)
+mtcars <- mtcars
+```
+
+```{r, data, error=FALSE, echo=FALSE,warning=FALSE}
+genes <- c("DPDCJFFM_01065","DPDCJFFM_01063", "dps", "pgl", "pdtaR", "pdtaS", "xfp", "nrdD", "metQ", "luxS", "ulaA")
+sum_stats_20 <- read_delim("~/2023.03.06_selectionStats_script/20_selectionStats.txt", show_col_types = FALSE) %>%
+  rename_with(~"gene", .cols = "Alignment") %>%
+  mutate(across(c(Theta, TajimasD, Pi, nseff), as.numeric))
+
+
+```
+
+```{r, echo= FALSE, include=FALSE}
+sum_stats_20_filtered <- sum_stats_20 %>% filter(!is.na(TajimasD))
+
+num_nas <- sum_stats_20 %>%
+  filter(is.na(TajimasD))
+
+filter_out <- nrow(num_nas)
+
+print(paste("There are", nrow(num_nas), "genes which were filtered out for >20% missing data"))
+print(paste("There are", nrow(sum_stats_20_filtered), "genes that passed filtering."))
+
+sum_stats_20_filtered <- sum_stats_20 %>% filter(!is.na(TajimasD))
+
+TD_genes <- sum_stats_20_filtered$gene
+
+num_genes <- nrow(sum_stats_20) - filter_out
+round_and_rank <- function(sum_stats, n) {
+  ranked <- sum_stats %>%
+    mutate(across(c(TajimasD, Theta, Pi, nseff), ~ round(., digits = 3)),
+           TD_rank = round(rank(TajimasD) / num_genes * 100),
+           Theta_rank = round(rank(Theta) / num_genes * 100),
+           Pi_rank = round(rank(Pi) / num_genes * 100))
+  ranked$n = n
+  return(ranked)
+}
+
+ranked_20 <- round_and_rank(sum_stats_20_filtered, 20)
+all <- ranked_20
+
+
+```
+
+## The distribution and summary of piNpiS calculations where N/0 = None, and are discarded from the analysis.
+
+```{r, echo=FALSE}
+pin_pis_None <- read_csv("~/piNpiS_test/None/selectionStats_piNpiS_average.csv", show_col_types = FALSE,
+                    col_names = c("gene", "PiNPiS")) %>%
+  mutate(PiNPiS_rank = round(rank(PiNPiS) / n() * 100)) %>% filter(gene %in% TD_genes)
+
+stats_None <- merge(all, pin_pis_None)
+
+print("Summary of selection stats across all genes: ")
+summary(stats_None)
+
+top_TD <- stats_None %>% filter(TajimasD > 2)
+#write_csv(top_TD, "~/2023.05.25_GV_Grant/top_TD.csv")
+
+interest <- filter(stats_None, gene %in% genes) %>%
+  mutate(gene = if_else(gene == "DPDCJFFM_01065", "fas", gene), gene= if_else(gene == "DPDCJFFM_01063", "bapA", gene)) %>% select(gene, Pi, Pi_rank, Theta, Theta_rank, TajimasD, TD_rank,  PiNPiS, PiNPiS_rank)
+
+print(paste(nrow(pin_pis_None), "of 1267 genes were analyzed"))
+
+distribution <- ggplot(pin_pis_None, aes(PiNPiS)) + geom_histogram(binwidth = .1) + theme_classic() + ggtitle("None") + theme(text = element_text(size=15)) + ggtitle("distribution of piNpiS with N/0 discarded")
+distribution 
+summary(stats_None)
+```
+# The genes we analyzed were dps, pgl, fas, pdtaR, pdtaS, xfp, and nrdD
+
+```{r, results='asis'}
+stargazer(interest, summary = FALSE, type= "latex")
+
+```
+
+
+
+```{r, echo= FALSE, include= FALSE}
+pin_pis_Six <- read_csv("~/piNpiS_test/Six/selectionStats_piNpiS_average.csv", show_col_types = FALSE,
+                    col_names = c("gene", "PiNPiS")) %>%
+  mutate(PiNPiS_rank = round(rank(PiNPiS) / n() * 100)) %>% filter(gene %in% TD_genes)
+
+stats_Six <- merge(all, pin_pis_Six)
+
+interest <- filter(stats_Six, gene %in% c("DPDCJFFM_01065", "dps", "pgl", "pdtaR")) %>%
+  mutate(gene = if_else(gene == "DPDCJFFM_01065", "fas", gene)) %>% select(gene, TajimasD, PiNPiS)
+
+print(paste(nrow(pin_pis_Six), "of 1267 genes were analyzed"))
+
+ggplot(pin_pis_Six, aes(PiNPiS)) + geom_histogram(binwidth = .1) + theme_classic() + ggtitle("Six")
+formattable(interest) 
+summary(pin_pis_Six)
+```
+
+
