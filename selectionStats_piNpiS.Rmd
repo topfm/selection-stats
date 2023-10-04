@@ -82,26 +82,5 @@ summary(stats_None)
 
 ```{r, results='asis'}
 stargazer(interest, summary = FALSE, type= "latex")
-
 ```
-
-
-
-```{r, echo= FALSE, include= FALSE}
-pin_pis_Six <- read_csv("~/piNpiS_test/Six/selectionStats_piNpiS_average.csv", show_col_types = FALSE,
-                    col_names = c("gene", "PiNPiS")) %>%
-  mutate(PiNPiS_rank = round(rank(PiNPiS) / n() * 100)) %>% filter(gene %in% TD_genes)
-
-stats_Six <- merge(all, pin_pis_Six)
-
-interest <- filter(stats_Six, gene %in% c("DPDCJFFM_01065", "dps", "pgl", "pdtaR")) %>%
-  mutate(gene = if_else(gene == "DPDCJFFM_01065", "fas", gene)) %>% select(gene, TajimasD, PiNPiS)
-
-print(paste(nrow(pin_pis_Six), "of 1267 genes were analyzed"))
-
-ggplot(pin_pis_Six, aes(PiNPiS)) + geom_histogram(binwidth = .1) + theme_classic() + ggtitle("Six")
-formattable(interest) 
-summary(pin_pis_Six)
-```
-
 
