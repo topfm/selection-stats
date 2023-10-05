@@ -59,31 +59,35 @@ all <- ranked_20
 ## The distribution and summary of piNpiS calculations where N/0 = None, and are discarded from the analysis.
 
 ```{r, echo=FALSE}
+
+#read in the piNpiS output file from mean_piNpiS.py
 pin_pis_None <- read_csv("~/piNpiS_test/None/selectionStats_piNpiS_average.csv", show_col_types = FALSE,
                     col_names = c("gene", "PiNPiS")) %>%
   mutate(PiNPiS_rank = round(rank(PiNPiS) / n() * 100)) %>% filter(gene %in% TD_genes)
-
 stats_None <- merge(all, pin_pis_None)
 
+#print the number of genes that were analyzed
+print(paste(nrow(pin_pis_None), "of 1267 genes were analyzed"))
+
+#give the summary statistics of the genes in the genome
 print("Summary of selection stats across all genes: ")
 summary(stats_None)
 
+#make a list of the genes with the highest Tajima's D
 top_TD <- stats_None %>% filter(TajimasD > 2)
 #write_csv(top_TD, "~/2023.05.25_GV_Grant/top_TD.csv")
 
+#filter to my particular genes of interest
 interest <- filter(stats_None, gene %in% genes) %>%
   mutate(gene = if_else(gene == "DPDCJFFM_01065", "fas", gene), gene= if_else(gene == "DPDCJFFM_01063", "bapA", gene)) %>% select(gene, Pi, Pi_rank, Theta, Theta_rank, TajimasD, TD_rank,  PiNPiS, PiNPiS_rank)
 
-print(paste(nrow(pin_pis_None), "of 1267 genes were analyzed"))
-
+#plot the distribution of genes 
 distribution <- ggplot(pin_pis_None, aes(PiNPiS)) + geom_histogram(binwidth = .1) + theme_classic() + ggtitle("None") + theme(text = element_text(size=15)) + ggtitle("distribution of piNpiS with N/0 discarded")
 distribution 
-
-summary(stats_None)
 ```
 # The genes we analyzed were dps, pgl, fas, pdtaR, pdtaS, xfp, and nrdD
-
 ```{r, results='asis'}
+#make a table in LaTeX
 stargazer(interest, summary = FALSE, type= "latex")
 ```
 
