@@ -10,34 +10,36 @@ output:
 library(tidyverse)
 library(formattable)
 library(stargazer)
-mtcars <- mtcars
 ```
 
 ```{r, data, error=FALSE, echo=FALSE,warning=FALSE}
 genes <- c("DPDCJFFM_01065","DPDCJFFM_01063", "dps", "pgl", "pdtaR", "pdtaS", "xfp", "nrdD", "metQ", "luxS", "ulaA")
 sum_stats_20 <- read_delim("~/2023.03.06_selectionStats_script/20_selectionStats.txt", show_col_types = FALSE) %>%
   rename_with(~"gene", .cols = "Alignment") %>%
-  mutate(across(c(Theta, TajimasD, Pi, nseff), as.numeric))
-
+  mutate(across(c(Theta, TajimasD, Pi, nseff), as.numeric), TajimasD = case_when(Pi == 0 & Theta == 0 ~ 0, TRUE ~ TajimasD))
 
 ```
 
 ```{r, echo= FALSE, include=FALSE}
-sum_stats_20_filtered <- sum_stats_20 %>% filter(!is.na(TajimasD))
 
+#filter out NAs and count them
 num_nas <- sum_stats_20 %>%
   filter(is.na(TajimasD))
 
 filter_out <- nrow(num_nas)
+#filter out 
+sum_stats_20_filtered <- sum_stats_20 %>% filter(!is.na(TajimasD))
 
+#report the number of genes that were filtered out for missing data
 print(paste("There are", nrow(num_nas), "genes which were filtered out for >20% missing data"))
 print(paste("There are", nrow(sum_stats_20_filtered), "genes that passed filtering."))
 
-sum_stats_20_filtered <- sum_stats_20 %>% filter(!is.na(TajimasD))
 
+
+#make a list of the genes
 TD_genes <- sum_stats_20_filtered$gene
-
 num_genes <- nrow(sum_stats_20) - filter_out
+
 round_and_rank <- function(sum_stats, n) {
   ranked <- sum_stats %>%
     mutate(across(c(TajimasD, Theta, Pi, nseff), ~ round(., digits = 3)),
@@ -76,6 +78,7 @@ print(paste(nrow(pin_pis_None), "of 1267 genes were analyzed"))
 
 distribution <- ggplot(pin_pis_None, aes(PiNPiS)) + geom_histogram(binwidth = .1) + theme_classic() + ggtitle("None") + theme(text = element_text(size=15)) + ggtitle("distribution of piNpiS with N/0 discarded")
 distribution 
+
 summary(stats_None)
 ```
 # The genes we analyzed were dps, pgl, fas, pdtaR, pdtaS, xfp, and nrdD
