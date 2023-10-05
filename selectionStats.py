@@ -11,7 +11,7 @@ import egglib
 # Alignments must also be in frame coding sequence. 
 # It outputs population genetic statistics for including theta, pi,
 # piN, piS, Tajima's D, and MK test table for each outgroup provided.
-# This script requires egglib installed with the Bio++ libraries
+# This script requires egglib3 installed with the Bio++ libraries
 
 
 class FullPaths(argparse.Action):
@@ -75,7 +75,8 @@ def calc_stats(alignment, outgroup):
         statDict['pi'] = float(polyDict['Pi'])/polyDict['lseff']
         statDict['tajimaD'] = polyDict['D']
         statDict['nseff'] = polyDict['nseff']
-    ##sometimes a site has more than the allowed max_missing data, and therefore it 
+    ##sometimes a site has more than the allowed max_missing data, and therefore it throws a TypeError. 
+    #In this case, we set the value for pi, theta and TD to be "None"
     except TypeError:
         statDict['theta'] = None 
         statDict['pi'] = None 
