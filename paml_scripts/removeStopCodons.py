@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import argparse
 import os
@@ -14,7 +14,7 @@ class FullPaths(argparse.Action):
     """Expand user- and relative-paths"""
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest,
-            os.path.abspath(os.path.expanduser(values)))
+                os.path.abspath(os.path.expanduser(values)))
 
 def listdir_fullpath(d):
     return [os.path.join(d, f) for f in os.listdir(d)]
@@ -39,8 +39,8 @@ def get_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Remove stop codons from fasta alignment')
     parser.add_argument("aln", help="original_alignment",
-        action=FullPaths,
-        type=is_file)
+                        action=FullPaths,
+                        type=is_file)
     return parser.parse_args()
 
 
@@ -58,7 +58,7 @@ for record in SeqIO.parse(inFile, "fasta"):
         codon = record.seq[index:index+3]
         if codon in codon_stop_array:
             print("ayyyyy")
-            codonIndices.append([index,index+3])
+            codonIndices.append([index, index+3])
 
 # remove duplicate indices
 noDupes = []
@@ -67,10 +67,12 @@ print(noDupes)
 
 # sorts in descending order to remove last to first in alignment
 # so indices don't get messed up
-desc = sorted(noDupes,reverse=True)
+desc = sorted(noDupes, reverse=True)
 print(desc)
 
 toParse = SeqIO.parse(inFile, "fasta")
+outFile = inFile.replace(".nucleotide.fasta", "_noStopCodons.fasta")
+
 for codon in desc:
     print(codon)
     startIdx = codon[0]
@@ -81,28 +83,7 @@ for codon in desc:
         del tempRecordSeq[startIdx:endIdx]
         record.seq = Seq("".join(tempRecordSeq))
         newRecords.append(record)
-    SeqIO.write(newRecords,"temp.fasta","fasta")
-    toParse = SeqIO.parse("temp.fasta","fasta")
+    SeqIO.write(newRecords, "temp.fasta", "fasta")
+    toParse = SeqIO.parse("temp.fasta", "fasta")
 
-
-SeqIO.write(newRecords,"noStopCodons.fasta","fasta")
-
-# print new record?
-
-### additional way to remove
-"""
-from Bio.Seq import Seq
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-
-codon_stop_array=["TAG","TGA","TAA"]
-record_without_stop=[]
-record_with_stop=[]
-
-for record in SeqIO.parse("your_fasta_file.fasta", "fasta"):
-    if any(codon in record.seq for codon in codon_stop_array):
-        record_with_stop.append(record)
-    else:
-        record_without_stop.append(record)
-
-"""
+SeqIO.write(newRecords, outFile, "fasta")
